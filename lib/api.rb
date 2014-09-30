@@ -39,6 +39,11 @@ class PTApi < Sinatra::Base
     Survey.all.to_json
   end
 
+  get '/surveys/:id' do
+    content_type :json
+    Survey.first(_id: params[:id].to_i).to_json
+  end
+
   post '/surveys' do
     data = JSON.parse(request.body.read)
     binding.pry
