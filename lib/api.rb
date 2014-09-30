@@ -25,6 +25,10 @@ class PTApi < Sinatra::Base
     MongoMapper.database = "pt-api"
   end
 
+  before do
+    headers 'Access-Control-Allow-Origin' => '*'
+  end
+
   get '/submissions' do
     content_type :json
     Submission.all.to_json
