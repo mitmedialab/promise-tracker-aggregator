@@ -8,10 +8,11 @@ class Survey
   include MongoMapper::Document
 
   key :survey_id, Integer
+  key :title, String
   key :inputs, Array
 end
 
-class Submission
+class Response
   include MongoMapper::Document
 
   key :survey_id, Integer
@@ -29,13 +30,14 @@ class PTApi < Sinatra::Base
     headers 'Access-Control-Allow-Origin' => '*'
   end
 
-  get '/submissions' do
+  get '/responses' do
     content_type :json
-    Submission.all.to_json
+    Response.all.to_json
   end
 
-  post '/submissions' do
-    Submission.create(params[:submission])
+  post '/responses' do
+    response_data = JSON.parse(params[:response])
+    Response.create(response_data)
   end
 
   get '/surveys' do
@@ -50,7 +52,6 @@ class PTApi < Sinatra::Base
 
   post '/surveys' do
     data = JSON.parse(request.body.read)
-    binding.pry
     Survey.create(data)
   end
 
