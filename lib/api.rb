@@ -50,6 +50,11 @@ class PTApi < Sinatra::Base
     Survey.first(_id: params[:id].to_i).to_json
   end
 
+  get '/surveys/:id/responses' do
+    content_type :json
+    Response.all(survey_id: params[:id].to_i).to_json
+  end
+
   post '/surveys' do
     data = JSON.parse(request.body.read)
     Survey.create(data)
