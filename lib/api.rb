@@ -52,8 +52,11 @@ class PTApi < Sinatra::Base
   get '/surveys/:id/close' do
     survey = Survey.first(_id: params[:id].to_i)
     survey.status = 'closed'
-    survey.save
-    survey.to_json
+    if survey.save!
+      { status: "success" }.to_json
+    else 
+      { status: "error" }.to_json
+    end
   end
 
   get '/surveys/:id/responses' do
@@ -67,8 +70,9 @@ class PTApi < Sinatra::Base
   end
 
   post '/responses' do
+    content_type :json
     response_data = JSON.parse(params[:response])
-    Response.create(response_data)
+    Response.create(response_data).to_json
   end
 
 end
