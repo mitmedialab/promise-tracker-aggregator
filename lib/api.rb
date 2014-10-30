@@ -3,6 +3,7 @@ require 'mongo'
 require 'mongo_mapper'
 require 'pry'
 require 'json/ext'
+require 'SecureRandom'
 
 class Survey
   include MongoMapper::Document
@@ -73,6 +74,17 @@ class PTApi < Sinatra::Base
     content_type :json
     response_data = JSON.parse(params[:response])
     Response.create(response_data).to_json
+  end
+
+  post '/upload_image' do
+    content_type :json
+    @original_name = params[:file][:filename]
+    @filename = SecureRandom.urlsafe_base64
+    @filename = @filename + @original_name[@original_name.rindex('.')..-1]
+    file = params[:file][:tempfile]
+    File.open("./public/#{@filename}", 'wb') do |f|
+      f.write(file.read)
+    end
   end
 
 end
