@@ -24,8 +24,8 @@ end
 class PTApi < Sinatra::Base
 
   configure do
-    MongoMapper.connection = Mongo::Connection.new("localhost", 27017)
-    MongoMapper.database = "pt-api"
+    MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
+    MongoMapper.database = 'pt-api'
   end
 
   before do
@@ -41,39 +41,74 @@ class PTApi < Sinatra::Base
     data = JSON.parse(request.body.read)
     survey = Survey.create(data)
     survey.status = 'active'
-    survey.save
-    survey.to_json
+
+    if survey.save
+      {
+        status: 'success',
+        payload: { id: survey.id }
+      }.to_json
+    else
+      {
+        status: 'error',
+        error_code: 13,
+        error_message: "Survey could not be saved because id is already taken"
+      }.to_json
+    end
   end
 
   get '/surveys/:id' do
     content_type :json
-    Survey.first(_id: params[:id].to_i).to_json
+    {
+      status: 'success',
+      payload: Survey.first(_id: params[:id].to_i)
+    }.to_json
   end
 
-  get '/surveys/:id/close' do
+  put '/surveys/:id/close' do
     survey = Survey.first(_id: params[:id].to_i)
     survey.status = 'closed'
-    if survey.save!
-      { status: "success" }.to_json
+
+    if survey.save
+      { 
+        status: 'success',
+        payload: { id: survey.id }
+      }.to_json
     else 
-      { status: "error" }.to_json
+      { status: 'error' }.to_json
     end
   end
 
   get '/surveys/:id/responses' do
     content_type :json
-    Response.all(survey_id: params[:id].to_i).to_json
+    {
+      status: 'success',
+      payload: Response.all(survey_id: params[:id].to_i)
+    }.to_json
   end
 
   get '/responses' do
     content_type :json
-    Response.all.to_json
+    {
+      status: 'success',
+      payload: Response.all
+    }.to_json
   end
 
   post '/responses' do
     content_type :json
     response_data = JSON.parse(params[:response])
-    Response.create(response_data).to_json
+    if Survey.first(_id: response_data['survey_id'].to_i).status == 'active'
+      {
+        status: 'success',
+        payload: Response.create(response_data)
+      }.to_json
+    else
+      {
+        status: 'error',
+        error_code: 12,
+        error_message: 'Response could not be posted because survey is closed'
+      }.to_json
+    end
   end
 
   post '/upload_image' do
