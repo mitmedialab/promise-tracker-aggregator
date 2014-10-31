@@ -117,7 +117,7 @@ class PTApi < Sinatra::Base
     else
       {
         status: 'error',
-        error_code: 12,
+        error_code: 14,
         error_message: 'Response could not be posted because survey is closed'
       }.to_json
     end
