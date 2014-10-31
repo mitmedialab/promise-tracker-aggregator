@@ -10,6 +10,7 @@ class Survey
   key :survey_id, Integer
   key :title, String
   key :status, String
+  key :start_date, Time
   key :inputs, Array
 end
 
@@ -40,6 +41,7 @@ class PTApi < Sinatra::Base
     data = JSON.parse(request.body.read)
     survey = Survey.create(data)
     survey.status = 'active'
+    survey.start_date = Time.now.midnight
 
     if survey.save
       {
