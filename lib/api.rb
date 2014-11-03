@@ -30,10 +30,10 @@ class PTApi < Sinatra::Base
 
   before do
     headers 'Access-Control-Allow-Origin' => '*'
+    content_type 'application/json'
   end
 
   get '/surveys' do
-    content_type :json
     Survey.all.to_json
   end
 
@@ -58,13 +58,12 @@ class PTApi < Sinatra::Base
   end
 
   get '/surveys/:id' do
-    content_type :json
     survey = Survey.first(_id: params[:id].to_i)
 
     if survey
       {
         status: 'success',
-        payload: Survey.first(_id: params[:id].to_i)
+        payload: survey
       }.to_json
     else
       {
@@ -77,28 +76,41 @@ class PTApi < Sinatra::Base
 
   put '/surveys/:id/close' do
     survey = Survey.first(_id: params[:id].to_i)
-    survey.status = 'closed'
-
-    if survey.save
+    
+    if survey
+      survey.status = 'closed'
+      survey.save
       { 
         status: 'success',
         payload: { id: survey.id }
       }.to_json
     else 
-      { status: 'error' }.to_json
+      {
+        status: 'error',
+        error_code: 12,
+        error_message: 'Survey not found'
+      }.to_json
     end
   end
 
   get '/surveys/:id/responses' do
-    content_type :json
-    {
-      status: 'success',
-      payload: Response.all(survey_id: params[:id].to_i)
-    }.to_json
+    survey = Survey.first(_id: params[:id].to_i)
+
+    if survey
+      {
+        status: 'success',
+        payload: Response.all(survey_id: params[:id].to_i)
+      }.to_json
+    else
+      {
+        status: 'error',
+        error_code: 12,
+        error_message: 'Survey not found'
+      }.to_json
+    end
   end
 
   get '/responses' do
-    content_type :json
     {
       status: 'success',
       payload: Response.all
@@ -106,21 +118,29 @@ class PTApi < Sinatra::Base
   end
 
   post '/responses' do
-    content_type :json
     response_data = JSON.parse(params[:response])
+    survey = Survey.first(_id: response_data['survey_id'].to_i)
 
-    if Survey.first(_id: response_data['survey_id'].to_i).status == 'active'
-      {
-        status: 'success',
-        payload: Response.create(response_data)
-      }.to_json
+    if survey
+      if survey.status == 'active'
+        response = Response.create(response_data)
+        {
+          status: 'success',
+          payload: {id: response.id}
+        }.to_json
+      else
+        {
+          status: 'error',
+          error_code: 14,
+          error_message: 'Response could not be posted because survey is closed'
+        }.to_json
+      end
     else
       {
         status: 'error',
-        error_code: 14,
-        error_message: 'Response could not be posted because survey is closed'
+        error_code: 12,
+        error_message: 'Survey not found'
       }.to_json
     end
   end
-
 end
