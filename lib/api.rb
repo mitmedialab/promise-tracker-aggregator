@@ -11,6 +11,7 @@ class Survey
   key :survey_id, Integer
   key :title, String
   key :status, String
+  key :start_date, Time
   key :inputs, Array
 end
 
@@ -41,6 +42,7 @@ class PTApi < Sinatra::Base
     data = JSON.parse(request.body.read)
     survey = Survey.create(data)
     survey.status = 'active'
+    survey.start_date = Time.now.midnight
 
     if survey.save
       {
@@ -51,17 +53,27 @@ class PTApi < Sinatra::Base
       {
         status: 'error',
         error_code: 13,
-        error_message: "Survey could not be saved because id is already taken"
+        error_message: 'Survey could not be saved because id is already taken'
       }.to_json
     end
   end
 
   get '/surveys/:id' do
     content_type :json
-    {
-      status: 'success',
-      payload: Survey.first(_id: params[:id].to_i)
-    }.to_json
+    survey = Survey.first(_id: params[:id].to_i)
+
+    if survey
+      {
+        status: 'success',
+        payload: Survey.first(_id: params[:id].to_i)
+      }.to_json
+    else
+      {
+        status: 'error',
+        error_code: 12,
+        error_message: 'Survey not found'
+      }.to_json
+    end
   end
 
   put '/surveys/:id/close' do
@@ -97,6 +109,7 @@ class PTApi < Sinatra::Base
   post '/responses' do
     content_type :json
     response_data = JSON.parse(params[:response])
+
     if Survey.first(_id: response_data['survey_id'].to_i).status == 'active'
       {
         status: 'success',
@@ -105,7 +118,7 @@ class PTApi < Sinatra::Base
     else
       {
         status: 'error',
-        error_code: 12,
+        error_code: 14,
         error_message: 'Response could not be posted because survey is closed'
       }.to_json
     end
