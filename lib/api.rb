@@ -3,6 +3,7 @@ require 'mongo'
 require 'mongo_mapper'
 require 'pry'
 require 'json/ext'
+require 'SecureRandom'
 
 class Survey
   include MongoMapper::Document
@@ -143,4 +144,56 @@ class PTApi < Sinatra::Base
       }.to_json
     end
   end
+
+  post '/upload_image' do
+    original_name = params[:file][:filename]
+    filename = SecureRandom.urlsafe_base64
+    filename = filename + original_name[original_name.rindex('.')..-1]
+    file = params[:file][:tempfile]
+    
+    begin
+      File.open("./public/#{filename}", 'wb') do |f|
+        f.write(file.read)
+        response = Response.find(params[:id])
+        if response
+          input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}
+          if input
+            input[0]['value'] = filename
+            if response.save
+              {
+                status: 'success',
+                payload: {id: params[:id], input_id: params[:input_id]}
+              }.to_json
+            else
+              {
+                status: 'error',
+                error_code: 16,
+                error_message: 'File Upload: cannot update response object'
+              }.to_json
+            end
+          else
+            {
+              status: 'error',
+              error_code: 15,
+              error_message: 'File Upload: cannot find the corresponding input'
+            }.to_json 
+          end
+        else
+          {
+            status: 'error',
+            error_code: 14,
+            error_message: 'File Upload: cannot find the response'
+          }.to_json
+        end
+      end # post: file.open
+    rescue IOError => e
+      return {
+        status: 'error',
+        error_code: 17,
+        error_message: 'File open failed'
+      }.to_json
+    ensure
+      file.close unless file == nil
+    end # post: try catch file.open error
+  end # post: upload_image
 end
