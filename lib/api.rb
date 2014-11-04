@@ -22,9 +22,11 @@ class Response
 end
 
 class PTApi < Sinatra::Base
-  set :public_folder, 'public'
 
   configure do
+    set :public_folder, 'public'
+    enable :static, :logging
+
     MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
     MongoMapper.database = 'pt-api'
   end
