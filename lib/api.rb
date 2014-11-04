@@ -24,7 +24,7 @@ end
 class PTApi < Sinatra::Base
 
   configure do
-    set :public_folder, 'public'
+    set :public_folder, File.dirname(__FILE__) + '/../public/'
     enable :static, :logging
 
     MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
@@ -154,7 +154,7 @@ class PTApi < Sinatra::Base
     file = params[:file][:tempfile]
 
     begin
-      File.open("./public/#{filename}", 'wb') do |f|
+      File.open(settings.public_folder + filename, 'wb') do |f|
         f.write(file.read)
         response = Response.find(params[:id])
         if response
