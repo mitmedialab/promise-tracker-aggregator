@@ -3,7 +3,6 @@ require 'mongo'
 require 'mongo_mapper'
 require 'pry'
 require 'json/ext'
-require 'SecureRandom'
 
 class Survey
   include MongoMapper::Document
@@ -23,6 +22,7 @@ class Response
 end
 
 class PTApi < Sinatra::Base
+  set :public_folder, 'public'
 
   configure do
     MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
@@ -150,7 +150,7 @@ class PTApi < Sinatra::Base
     filename = SecureRandom.urlsafe_base64
     filename = filename + original_name[original_name.rindex('.')..-1]
     file = params[:file][:tempfile]
-    
+
     begin
       File.open("./public/#{filename}", 'wb') do |f|
         f.write(file.read)
@@ -158,7 +158,7 @@ class PTApi < Sinatra::Base
         if response
           input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}
           if input
-            input[0]['value'] = filename
+            input[0]['value'] = "#{request.base_url}/#{filename}"
             if response.save
               {
                 status: 'success',
