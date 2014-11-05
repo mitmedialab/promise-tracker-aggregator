@@ -113,6 +113,26 @@ class PTApi < Sinatra::Base
     end
   end
 
+  get '/surveys/:id/survey-with-responses' do
+    survey = Survey.first(_id: params[:id].to_i)
+
+    if survey
+      {
+        status: 'success',
+        payload: {
+          survey: survey,
+          responses: Response.all(survey_id: params[:id].to_i)
+        }
+      }.to_json
+    else
+      {
+        status: 'error',
+        error_code: 12,
+        error_message: 'Survey not found'
+      }.to_json
+    end
+  end
+
   get '/responses' do
     {
       status: 'success',
