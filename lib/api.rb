@@ -10,6 +10,7 @@ class Survey
   key :survey_id, Integer
   key :title, String
   key :status, String
+  key :description, String
   key :start_date, Time
   key :inputs, Array
 end
