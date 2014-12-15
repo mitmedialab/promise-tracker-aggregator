@@ -7,12 +7,12 @@ require 'json/ext'
 class Survey
   include MongoMapper::Document
 
-  key :survey_id, Integer
   key :title, String
   key :status, String
   key :description, String
   key :start_date, Time
   key :inputs, Array
+
 end
 
 class Response
@@ -41,11 +41,20 @@ class PTApi < Sinatra::Base
     Survey.all.to_json
   end
 
-  post '/surveys' do
+  post '/surveys/:status' do
     data = JSON.parse(request.body.read)
-    survey = Survey.create(data)
-    survey.status = 'active'
+    survey = Survey.first(_id: data['id'])
+
+    if survey
+      survey.set(data)
+    else
+      survey = Survey.create(data)
+    end
+
+    survey.reload
+    survey.status = params[:status]
     survey.start_date = Time.now.midnight
+    Response.destroy_all({survey_id: survey.id})
 
     if survey.save
       {
