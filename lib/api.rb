@@ -8,8 +8,8 @@ class Survey
   include MongoMapper::Document
 
   key :title, String
+  key :code, Integer
   key :status, String
-  key :description, String
   key :start_date, Time
   key :inputs, Array
 
@@ -43,7 +43,7 @@ class PTApi < Sinatra::Base
 
   post '/surveys/:status' do
     data = JSON.parse(request.body.read)
-    survey = Survey.first(_id: data['id'])
+    survey = Survey.first(id: data['id'])
 
     if survey
       survey.set(data)
@@ -70,8 +70,8 @@ class PTApi < Sinatra::Base
     end
   end
 
-  get '/surveys/:id' do
-    survey = Survey.first(_id: params[:id].to_i)
+  get '/surveys/:code' do
+    survey = Survey.first(code: params[:code].to_i)
 
     if survey
       {
@@ -87,8 +87,8 @@ class PTApi < Sinatra::Base
     end
   end
 
-  put '/surveys/:id/close' do
-    survey = Survey.first(_id: params[:id].to_i)
+  put '/surveys/:code/close' do
+    survey = Survey.first(code: params[:code].to_i)
     
     if survey
       survey.status = 'closed'
@@ -106,13 +106,13 @@ class PTApi < Sinatra::Base
     end
   end
 
-  get '/surveys/:id/responses' do
-    survey = Survey.first(_id: params[:id].to_i)
+  get '/surveys/:code/responses' do
+    survey = Survey.first(code: params[:code].to_i)
 
     if survey
       {
         status: 'success',
-        payload: Response.all(survey_id: params[:id].to_i)
+        payload: Response.all(survey_id: survey.id)
       }.to_json
     else
       {
@@ -123,15 +123,15 @@ class PTApi < Sinatra::Base
     end
   end
 
-  get '/surveys/:id/survey-with-responses' do
-    survey = Survey.first(_id: params[:id].to_i)
+  get '/surveys/:code/survey-with-responses' do
+    survey = Survey.first(code: params[:code].to_i)
 
     if survey
       {
         status: 'success',
         payload: {
           survey: survey,
-          responses: Response.all(survey_id: params[:id].to_i)
+          responses: Response.all(survey_id: survey.id)
         }
       }.to_json
     else
@@ -155,13 +155,13 @@ class PTApi < Sinatra::Base
     survey = Survey.first(_id: response_data['survey_id'].to_i)
 
     if survey
-      if survey.status == 'active'
+      if survey.status == 'active' || survey.status == 'test'
         response = Response.create(response_data)
         {
           status: 'success',
           payload: {id: response.id}
         }.to_json
-      else
+      elsif survey.status == 'closed'
         {
           status: 'error',
           error_code: 14,
