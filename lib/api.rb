@@ -38,7 +38,12 @@ class PTApi < Sinatra::Base
   end
 
   get '/surveys' do
-    Survey.all.to_json
+    surveys = Survey.all
+
+    {
+      status: 'success',
+      payload: surveys
+    }.to_json
   end
 
   post '/surveys/:status' do
