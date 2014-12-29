@@ -64,7 +64,7 @@ class PTApi < Sinatra::Base
     if survey.save
       {
         status: 'success',
-        payload: { id: survey.id }
+        payload: { id: survey.id, start_date: survey.start_date }
       }.to_json
     else
       {
