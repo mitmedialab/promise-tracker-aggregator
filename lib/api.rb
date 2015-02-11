@@ -32,6 +32,7 @@ class PTApi < Sinatra::Base
 
   configure do
     set :public_folder, File.dirname(__FILE__) + '/../public/'
+    set :access_key, ENV['ACCESS_KEY']
     enable :static, :logging
 
     MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
@@ -41,6 +42,14 @@ class PTApi < Sinatra::Base
   before do
     headers 'Access-Control-Allow-Origin' => '*'
     content_type 'application/json'
+    error 401 unless env['HTTP_AUTHORIZATION'] == :access_key
+  end
+
+  options '*' do
+    response.headers['Allow'] = 'HEAD,GET,POST,PUT,DELETE,OPTIONS'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'X-Requested-With, X-HTTP-Method-Override, Content-Type, Authorization, Accept, Cache-Control'
+    200
   end
 
   get '/getId' do
@@ -176,13 +185,14 @@ class PTApi < Sinatra::Base
   end
 
   post '/responses' do
+    binding.pry
     response_data = JSON.parse(params[:response])
     survey = Survey.first(_id: response_data['survey_id'].to_i)
     duplicate = Response.first(
       installation_id: response_data['installation_id'],
       timestamp: response_data['timestamp']
     )
-    binding.pry
+
     if survey && !duplicate
       if survey.status != 'closed'
         response = Response.create(response_data)
