@@ -42,7 +42,10 @@ class PTApi < Sinatra::Base
   before do
     headers 'Access-Control-Allow-Origin' => '*'
     content_type 'application/json'
-    error 401 unless env['HTTP_AUTHORIZATION'] == :access_key
+
+    if request.post?
+      error 401 unless env['HTTP_AUTHORIZATION'] == :access_key
+    end
   end
 
   options '*' do
@@ -185,7 +188,6 @@ class PTApi < Sinatra::Base
   end
 
   post '/responses' do
-    binding.pry
     response_data = JSON.parse(params[:response])
     survey = Survey.first(_id: response_data['survey_id'].to_i)
     duplicate = Response.first(
