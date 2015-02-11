@@ -4,6 +4,12 @@ require 'mongo_mapper'
 require 'pry'
 require 'json/ext'
 
+class Setting
+  include MongoMapper::Document
+  
+  key :installation_id, Integer
+end
+
 class Survey
   include MongoMapper::Document
 
@@ -35,6 +41,20 @@ class PTApi < Sinatra::Base
   before do
     headers 'Access-Control-Allow-Origin' => '*'
     content_type 'application/json'
+  end
+
+  get '/getId' do
+    setting = Setting.first()
+    id = setting.installation_id
+
+    id += 1
+    setting.installation_id = id
+    if setting.save
+      {
+        status: 'success',
+        payload: {installation_id: id}
+      }.to_json
+    end
   end
 
   get '/surveys' do
@@ -158,21 +178,30 @@ class PTApi < Sinatra::Base
   post '/responses' do
     response_data = JSON.parse(params[:response])
     survey = Survey.first(_id: response_data['survey_id'].to_i)
-
-    if survey
-      if survey.status == 'active' || survey.status == 'test'
+    duplicate = Response.first(
+      installation_id: response_data['installation_id'],
+      timestamp: response_data['timestamp']
+    )
+    binding.pry
+    if survey && !duplicate
+      if survey.status != 'closed'
         response = Response.create(response_data)
         {
           status: 'success',
           payload: {id: response.id}
         }.to_json
-      elsif survey.status == 'closed'
+      else
         {
           status: 'error',
           error_code: 14,
           error_message: 'Response could not be posted because survey is closed'
         }.to_json
       end
+    elsif duplicate
+      {
+        status: 'success',
+        payload: {id: duplicate.id}
+      }.to_json
     else
       {
         status: 'error',
