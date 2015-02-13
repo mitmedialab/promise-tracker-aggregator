@@ -1,3 +1,4 @@
 .bundle
 vendor/bundler
 public/
+config.yml

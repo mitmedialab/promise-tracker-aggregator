@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'sinatra/config_file'
 require 'mongo'
 require 'mongo_mapper'
 require 'pry'
@@ -29,10 +30,12 @@ class Response
 end
 
 class PTApi < Sinatra::Base
+  register Sinatra::ConfigFile
+
+  config_file File.dirname(__FILE__) + '/../config.yml'
 
   configure do
     set :public_folder, File.dirname(__FILE__) + '/../public/'
-    set :access_key, ENV['ACCESS_KEY']
     enable :static, :logging
 
     MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
@@ -44,7 +47,7 @@ class PTApi < Sinatra::Base
     content_type 'application/json'
 
     if request.post?
-      error 401 unless env['HTTP_AUTHORIZATION'] == :access_key
+      error 401 unless env['HTTP_AUTHORIZATION'] == settings.access_key
     end
   end
 
