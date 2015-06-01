@@ -152,7 +152,7 @@ class PTApi < Sinatra::Base
     if survey
       {
         status: 'success',
-        payload: Response.all(survey_id: survey.id)
+        payload: Response.where(survey_id: survey.id).sort(:timestamp.desc)
       }.to_json
     else
       {
@@ -171,7 +171,7 @@ class PTApi < Sinatra::Base
         status: 'success',
         payload: {
           survey: survey,
-          responses: Response.all(survey_id: survey.id)
+          responses: Response.where(survey_id: survey.id).sort(:timestamp.desc)
         }
       }.to_json
     else
