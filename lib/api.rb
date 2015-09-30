@@ -8,7 +8,23 @@ require 'json/ext'
 class Setting
   include MongoMapper::Document
   
-  key :installation_id, Integer
+  key :current_install_id, Integer
+end
+
+class Registration
+  include MongoMapper::Document
+
+  key :install_id, Integer
+  key :device_id, Integer
+end
+
+class Reading
+  include MongoMapper::Document
+
+  key :survey_id, Integer
+  key :timestamp, Time
+  key :sensorId, Integer
+  key :sensorValue, Float
 end
 
 class Survey
@@ -58,18 +74,46 @@ class PTApi < Sinatra::Base
     200
   end
 
-  get '/getId' do
+  get '/register' do
     setting = Setting.first()
-    id = setting.installation_id
+    id = setting.current_install_id
 
     id += 1
-    setting.installation_id = id
+    setting.current_install_id = id
     if setting.save
       {
         status: 'success',
-        payload: {installation_id: id}
+        payload: {
+          install_id: id,
+          device_id: ""
+        }
       }.to_json
     end
+  end
+
+  get '/readings' do
+    all_readings = Reading.all
+
+    {
+      status: 'success',
+      payload: all_readings
+    }.to_json
+  end
+
+  post '/readings' do
+    readings = JSON.parse(request.body.read)
+    saved_readings = []
+
+    readings.each do |reading|
+      reading = Reading.create(reading)
+      reading.save
+      saved_readings.push(reading)
+    end
+
+    {
+      status: 'success',
+      payload: saved_readings
+    }.to_json
   end
 
   get '/surveys' do
