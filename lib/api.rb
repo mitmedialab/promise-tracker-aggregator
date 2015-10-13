@@ -22,7 +22,6 @@ class Reading
   include MongoMapper::Document
 
   key :survey_id, Integer
-  key :timestamp, Time
   key :sensorId, Integer
   key :sensorValue, Float
 end
@@ -101,7 +100,7 @@ class PTApi < Sinatra::Base
   end
 
   post '/readings' do
-    readings = JSON.parse(request.body.read)
+    readings = JSON.parse(request.body.read)["readings"]
     saved_readings = []
 
     readings.each do |reading|
