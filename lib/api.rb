@@ -231,7 +231,8 @@ class PTApi < Sinatra::Base
         status: 'success',
         payload: {
           survey: survey,
-          responses: Response.where(survey_id: survey.id).sort(:timestamp.desc)
+          responses: Response.where(survey_id: survey.id).sort(:timestamp.desc),
+          readings: Reading.where(survey_id: survey.id).sort(:timestamp.desc)
         }
       }.to_json
     else
