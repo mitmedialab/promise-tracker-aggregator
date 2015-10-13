@@ -115,6 +115,23 @@ class PTApi < Sinatra::Base
     }.to_json
   end
 
+  get '/surveys/:code/readings' do
+    survey = Survey.first(code: params[:code].to_i)
+
+    if survey
+      {
+        status: 'success',
+        payload: Reading.where(survey_id: survey.id).sort(:timestamp.desc)
+      }.to_json
+    else
+      {
+        status: 'error',
+        error_code: 12,
+        error_message: 'Survey not found'
+      }.to_json
+    end
+  end
+
   get '/surveys' do
     surveys = Survey.all
 
