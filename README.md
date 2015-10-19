@@ -6,7 +6,8 @@ To Set Up
 ------------
 
 1. Create a config.yml file based on template. This file should contain the private keys used by the Promise Tracker Builder and Mobile Client in order to post data.
-3. Run `bundle install`
+2. Run `bundle install`
+
 
 To Run
 ----------
