@@ -14,6 +14,7 @@ end
 class Reading
   include MongoMapper::Document
 
+  key :user_installation_id, Integer
   key :survey_id, Integer
   key :sensorId, Integer
   key :sensorValue, Float
