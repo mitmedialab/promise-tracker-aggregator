@@ -38,6 +38,10 @@ class Response
   key :answers, Array
 end
 
+class Selfie
+  include MongoMapper::Document
+end
+
 class PTApi < Sinatra::Base
   register Sinatra::ConfigFile
 
@@ -140,7 +144,6 @@ class PTApi < Sinatra::Base
   post '/surveys/:status' do
     data = JSON.parse(request.body.read)
     survey = Survey.first(id: data['id'])
-    binding.pry
 
     if survey
       survey.set(data)
@@ -284,6 +287,24 @@ class PTApi < Sinatra::Base
     end
   end
 
+  get '/selfies' do
+    all_selfies = Selfie.all
+
+    {
+      status: 'success',
+      payload: all_selfies
+    }.to_json
+  end
+
+  post '/selfies' do
+    selfie_data = JSON.parse(params[:selfie])
+    selfie = Selfie.create(selfie_data)
+    {
+      status: 'success',
+      payload: {id: response.id}
+    }.to_json
+  end
+
   post '/upload_image' do
     original_name = params[:file][:filename]
     filename = SecureRandom.urlsafe_base64
@@ -323,6 +344,43 @@ class PTApi < Sinatra::Base
             error_code: 14,
             error_message: 'File Upload: cannot find the response'
           }.to_json
+        end
+      end # post: file.open
+    rescue IOError => e
+      return {
+        status: 'error',
+        error_code: 17,
+        error_message: 'File open failed'
+      }.to_json
+    ensure
+      file.close unless file == nil
+    end # post: try catch file.open error
+  end # post: upload_image
+
+  post '/upload_seflie' do
+    original_name = params[:file][:filename]
+    filename = SecureRandom.urlsafe_base64
+    filename = filename + original_name[original_name.rindex('.')..-1]
+    file = params[:file][:tempfile]
+
+    begin
+      File.open(settings.public_folder + filename, 'wb') do |f|
+        f.write(file.read)
+        selfie = Selfie.find(params[:id])
+        if selfie
+          selfie['URI'] = "#{request.base_url}/#{filename}"
+          if selfie.save
+            {
+              status: 'success',
+              payload: {}
+            }.to_json
+          else
+            {
+              status: 'error',
+              error_code: 16,
+              error_message: 'File Upload: cannot update selfie object'
+            }.to_json
+          end
         end
       end # post: file.open
     rescue IOError => e
