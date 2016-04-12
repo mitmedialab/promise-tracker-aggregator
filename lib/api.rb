@@ -301,7 +301,7 @@ class PTApi < Sinatra::Base
     selfie = Selfie.create(selfie_data)
     {
       status: 'success',
-      payload: {id: response.id}
+      payload: {id: selfie.id}
     }.to_json
   end
 
