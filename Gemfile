@@ -1,8 +1,10 @@
 source 'https://rubygems.org'
 
 gem 'sinatra'
-gem 'rack'
-gem 'mongo_mapper'
+gem 'rack', '~> 1.5.2'
+gem 'mongo_mapper', '~> 0.13.0'
 gem 'pry'
 gem 'bson_ext'
 gem 'sinatra-contrib'
+gem 'aws-sdk', '< 2.0'
+gem 'activemodel', '~>4.1.6'
