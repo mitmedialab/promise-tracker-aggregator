@@ -239,7 +239,7 @@ class PTApi < Sinatra::Base
         if response
           input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}
           if input
-            input[0]['value'] = "#{request.base_url}/#{filename}"
+            input[0]['value'] = "#{request.base_url.read}/#{filename}"
             if response.save
               {
                 status: 'success',
