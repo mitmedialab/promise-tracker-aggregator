@@ -1,34 +1,34 @@
 require 'sinatra'
 require 'sinatra/config_file'
 require 'mongo'
-require 'mongo_mapper'
+require 'mongoid'
 require 'pry'
 require 'json/ext'
 require 'aws/s3'
 require 'pry'
 
 class Setting
-  include MongoMapper::Document
+  include Mongoid::Document
   
-  key :installation_id, Integer
+  field :installation_id, type: Integer
 end
 
 class Survey
-  include MongoMapper::Document
+  include Mongoid::Document
 
-  key :title, String
-  key :code, Integer
-  key :status, String
-  key :start_date, Time
-  key :inputs, Array
+  field :title, type: String
+  field :code, type: Integer
+  field :status, type: String
+  field :start_date, type: Time
+  field :inputs, type: Array
 
 end
 
 class Response
-  include MongoMapper::Document
+  include Mongoid::Document
 
-  key :survey_id, Integer
-  key :answers, Array
+  field :survey_id, type: Integer
+  field :answers, type: Array
 end
 
 class PTApi < Sinatra::Base
@@ -40,8 +40,12 @@ class PTApi < Sinatra::Base
     set :public_folder, File.dirname(__FILE__) + '/../public/'
     enable :static, :logging
 
-    MongoMapper.connection = Mongo::Connection.new('localhost', 27017)
-    MongoMapper.database = 'pt-api'
+    Mongoid.configure do |config|
+      config.clients.default = {
+        hosts: ['localhost:27017'],
+        database: 'pt-api'
+      }
+    end
   end
 
   before do
@@ -113,7 +117,7 @@ class PTApi < Sinatra::Base
   end
 
   get '/surveys/:code' do
-    survey = Survey.first(code: params[:code].to_i)
+    survey = Survey.where(code: params[:code].to_i).first
 
     if survey
       {
@@ -130,7 +134,7 @@ class PTApi < Sinatra::Base
   end
 
   put '/surveys/:code/close' do
-    survey = Survey.first(code: params[:code].to_i)
+    survey = Survey.where(code: params[:code].to_i).first
     
     if survey
       survey.status = 'closed'
@@ -149,7 +153,7 @@ class PTApi < Sinatra::Base
   end
 
   get '/surveys/:code/responses' do
-    survey = Survey.first(code: params[:code].to_i)
+    survey = Survey.where(code: params[:code].to_i).first
 
     if survey
       {
@@ -166,7 +170,7 @@ class PTApi < Sinatra::Base
   end
 
   get '/surveys/:code/survey-with-responses' do
-    survey = Survey.first(code: params[:code].to_i)
+    survey = Survey.where(code: params[:code].to_i).first
 
     if survey
       {
