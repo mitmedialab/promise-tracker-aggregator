@@ -4,7 +4,6 @@ require 'mongo'
 require 'mongoid'
 require 'pry'
 require 'json/ext'
-require 'aws/s3'
 require 'pry'
 
 class Setting
@@ -238,60 +237,49 @@ class PTApi < Sinatra::Base
     filename = filename + original_name[original_name.rindex('.')..-1]
     file = params[:file][:tempfile]
 
-    # rescue errors from S3
     begin
-      AWS.config(
-        access_key_id: settings.aws_access_key_id,
-        secret_access_key: settings.aws_secret_access_key
-      )
-
-      s3 = AWS::S3.new
-      bucket = s3.buckets[settings.aws_bucket]
-      obj = bucket.objects.create(filename, 'data')
-      obj.write(file: file)
-      obj.acl = :public_read
-
-      response = Response.find(params[:id])
-
-      if response
-        input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}
-        if input
-          answer = input[0]['value']
-          url = "https://#{settings.aws_bucket}.s3.amazonaws.com/#{filename}"
-          answer.kind_of?(Array) ? answer[answer.find_index(params[:fileLocation])] = url : answer = url
-
-          if response.save
-            {
-              status: 'success',
-              payload: {id: params[:id], input_id: params[:input_id]}
-            }.to_json
+      File.open(settings.public_folder + filename, 'wb') do |f|
+        f.write(file.read)
+        response = Response.find(params[:id])
+        if response
+          input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}
+          if input
+            input[0]['value'] = "#{request.base_url}/#{filename}"
+            if response.save
+              {
+                status: 'success',
+                payload: {id: params[:id], input_id: params[:input_id]}
+              }.to_json
+            else
+              {
+                status: 'error',
+                error_code: 16,
+                error_message: 'File Upload: cannot update response object'
+              }.to_json
+            end
           else
             {
               status: 'error',
-              error_code: 16,
-              error_message: 'File Upload: cannot update response object'
-            }.to_json
+              error_code: 15,
+              error_message: 'File Upload: cannot find the corresponding input'
+            }.to_json 
           end
         else
           {
             status: 'error',
-            error_code: 15,
-            error_message: 'File Upload: cannot find the corresponding input'
+            error_code: 14,
+            error_message: 'File Upload: cannot find the response'
           }.to_json
         end
-      else
-        {
-          status: 'error',
-          error_code: 14,
-          error_message: 'File Upload: cannot find the response'
-        }.to_json
-      end
-    rescue AWS::Errors::Base
+      end # post: file.open
+    rescue IOError => e
       return {
         status: 'error',
         error_code: 17,
-        error_message: 'File save failed on S3'
+        error_message: 'File open failed'
       }.to_json
-    end
-  end # end post to S3
+    ensure
+      file.close unless file == nil
+    end # post: try catch file.open error
+  end # post: upload_image
 end
