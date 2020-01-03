@@ -44,6 +44,9 @@ class PTApi < Sinatra::Base
         hosts: ['localhost:27017'],
         database: 'pt-api'
       }
+      config.clients.default = {
+        uri: settings.db_connection_string,
+      }
     end
   end
 
