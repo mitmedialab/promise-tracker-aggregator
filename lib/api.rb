@@ -32,18 +32,15 @@ end
 
 class PTApi < Sinatra::Base
   register Sinatra::ConfigFile
-
   config_file File.dirname(__FILE__) + '/../config.yml'
+
+  require File.join(root, '/config/initializers/mongoid.rb')
 
   configure do
     set :public_folder, File.dirname(__FILE__) + '/../public/'
     enable :static, :logging
 
     Mongoid.configure do |config|
-      config.clients.default = {
-        hosts: ['localhost:27017'],
-        database: 'pt-api'
-      }
       config.clients.default = {
         uri: settings.db_connection_string,
       }
