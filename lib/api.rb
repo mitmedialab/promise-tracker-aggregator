@@ -88,7 +88,7 @@ class PTApi < Sinatra::Base
 
   post '/surveys/:status' do
     data = JSON.parse(request.body.read)
-    survey = Survey.find(data['id'])
+    survey = Survey.find(data['id'].to_i)
 
     if survey
       survey.set(data)
