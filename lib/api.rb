@@ -15,8 +15,10 @@ end
 class Survey
   include Mongoid::Document
 
+  field :id, type: Integer
   field :title, type: String
   field :code, type: Integer
+  field :campaign_id, type: Integer
   field :status, type: String
   field :start_date, type: Time
   field :inputs, type: Array
@@ -26,8 +28,10 @@ end
 class Response
   include Mongoid::Document
 
+  field :timestamp, type: Integer
   field :survey_id, type: Integer
   field :answers, type: Array
+  field :locationstamp, type: Hash
 end
 
 class PTApi < Sinatra::Base
@@ -205,7 +209,7 @@ class PTApi < Sinatra::Base
 
     if survey && !duplicate
       if survey.status != 'closed'
-        response = Response.create(response_data.delete("status"))
+        response = Response.create(response_data.except("status", "installation_id"))
         {
           status: 'success',
           payload: {id: response.id}
