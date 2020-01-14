@@ -88,7 +88,7 @@ class PTApi < Sinatra::Base
 
   post '/surveys/:status' do
     data = JSON.parse(request.body.read)
-    survey = Survey.first(id: data['id'])
+    survey = Survey.find(data['id'])
 
     if survey
       survey.set(data)
@@ -197,15 +197,15 @@ class PTApi < Sinatra::Base
 
   post '/responses' do
     response_data = JSON.parse(params[:response])
-    survey = Survey.first(_id: response_data['survey_id'].to_i)
-    duplicate = Response.first(
+    survey = Survey.find(response_data['survey_id'].to_i)
+    duplicate = Response.where(
       installation_id: response_data['installation_id'],
       timestamp: response_data['timestamp']
-    )
+    ).first
 
     if survey && !duplicate
       if survey.status != 'closed'
-        response = Response.create(response_data)
+        response = Response.create(response_data.delete("status"))
         {
           status: 'success',
           payload: {id: response.id}
