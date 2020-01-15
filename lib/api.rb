@@ -14,6 +14,7 @@ end
 
 class Survey
   include Mongoid::Document
+  include Mongoid::Attributes::Dynamic
 
   field :id, type: Integer
   field :title, type: String
@@ -162,7 +163,7 @@ class PTApi < Sinatra::Base
     if survey
       {
         status: 'success',
-        payload: Response.where(survey_id: survey.id).sort(:timestamp.desc)
+        payload: Response.where(survey_id: survey.id).sort(:timestamp.desc).to_a
       }.to_json
     else
       {
@@ -181,7 +182,7 @@ class PTApi < Sinatra::Base
         status: 'success',
         payload: {
           survey: survey,
-          responses: Response.where(survey_id: survey.id).sort(:timestamp.desc)
+          responses: Response.where(survey_id: survey.id).sort(:timestamp.desc).to_a
         }
       }.to_json
     else
@@ -196,7 +197,7 @@ class PTApi < Sinatra::Base
   get '/responses' do
     {
       status: 'success',
-      payload: Response.all
+      payload: Response.all.limit(5000).to_a
     }.to_json
   end
 
@@ -213,7 +214,7 @@ class PTApi < Sinatra::Base
         response = Response.create(response_data.except("status"))
         {
           status: 'success',
-          payload: {id: response.id}
+          payload: {id: response.id.to_s}
         }.to_json
       else
         {
@@ -225,7 +226,7 @@ class PTApi < Sinatra::Base
     elsif duplicate
       {
         status: 'success',
-        payload: {id: duplicate.id}
+        payload: {id: duplicate.id.to_s}
       }.to_json
     else
       {
@@ -247,9 +248,10 @@ class PTApi < Sinatra::Base
         f.write(file.read)
         response = Response.find(params[:id])
         if response
-          input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}
+          input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}.first
+          input_index = response.answers.find_index(input)
           if input
-            input[0]['value'] = "#{request.base_url}/#{filename}"
+            response.answers[input_index]['value'] = "#{request.base_url}/#{filename}"
             if response.save
               {
                 status: 'success',
