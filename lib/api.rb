@@ -14,7 +14,6 @@ end
 
 class Survey
   include Mongoid::Document
-  include Mongoid::Attributes::Dynamic
 
   field :id, type: Integer
   field :title, type: String
@@ -94,7 +93,7 @@ class PTApi < Sinatra::Base
 
   post '/surveys/:status' do
     data = JSON.parse(request.body.read)
-    survey = Survey.find(data['id'].to_i)
+    survey =  Survey.find(data['id'])
 
     if survey
       survey.set(data)

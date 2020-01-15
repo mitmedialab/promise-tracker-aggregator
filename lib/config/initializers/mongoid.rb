@@ -7,3 +7,5 @@ module Mongoid
     end
   end
 end
+
+Mongoid.raise_not_found_error = false
