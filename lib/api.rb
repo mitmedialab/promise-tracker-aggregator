@@ -48,7 +48,6 @@ class PTApi < Sinatra::Base
     Mongoid.configure do |config|
       config.clients.default = {
         uri: settings.db_connection_string,
-      }
     end
   end
 
@@ -250,7 +249,18 @@ class PTApi < Sinatra::Base
           input = response[:answers].select {|input| input['id'] == params[:input_id].to_i}.first
           input_index = response.answers.find_index(input)
           if input
-            response.answers[input_index]['value'] = "#{request.base_url}/#{filename}"
+            #Account for previous mobile versions where only one image per question was possible
+            value = response.answers[input_index]['value']
+            if value.kind_of?(Array)
+              image_index = nil
+              value.each_with_index do |s, i|
+                image_index = i if s.exclude?(request.base_url) && s.split('/')[-1] == original_name
+              end
+              value[image_index] = "#{request.base_url}/#{filename}" if image_index
+            else
+              value = "#{request.base_url}/#{filename}"
+            end
+
             if response.save
               {
                 status: 'success',
