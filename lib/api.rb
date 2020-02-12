@@ -48,6 +48,7 @@ class PTApi < Sinatra::Base
     Mongoid.configure do |config|
       config.clients.default = {
         uri: settings.db_connection_string,
+      }
     end
   end
 
