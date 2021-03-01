@@ -26,7 +26,7 @@ GEM
     pry (0.12.2)
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
-    rack (2.0.7)
+    rack (2.1.4)
     rack-protection (2.0.7)
       rack
     sinatra (2.0.7)
@@ -55,7 +55,7 @@ DEPENDENCIES
   mongo (~> 2.10.2)
   mongoid (~> 7.0)
   pry
-  rack (~> 2.0)
+  rack (~> 2.1)
   sinatra (~> 2.0.7)
   sinatra-contrib
 
