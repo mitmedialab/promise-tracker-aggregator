@@ -255,11 +255,11 @@ class PTApi < Sinatra::Base
             if value.kind_of?(Array)
               image_index = nil
               value.each_with_index do |s, i|
-                image_index = i if s.exclude?(request.base_url) && s.split('/')[-1] == original_name
+                image_index = i if s.exclude?(settings.base_url) && s.split('/')[-1] == original_name
               end
-              value[image_index] = "#{request.base_url}/#{filename}" if image_index
+              value[image_index] = "#{settings.base_url}/#{filename}" if image_index
             else
-              value = "#{request.base_url}/#{filename}"
+              value = "#{settings.base_url}/#{filename}"
             end
 
             if response.save
