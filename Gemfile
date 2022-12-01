@@ -1,7 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'sinatra', '~> 2.0.7'
-gem 'rack', '~> 2.0'
+gem 'sinatra', '~> 3.0.4'
+gem 'rack', '~> 2.2'
 gem 'mongo', '~>2.10.2'
 gem 'mongoid', '~> 7.0'
 gem 'pry'
